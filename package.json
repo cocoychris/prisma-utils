@@ -1,0 +1,35 @@
+{
+  "name": "@andrash/prisma-utils",
+  "version": "1.0.0",
+  "description": "A collection of utilities for Node.js projects using Prisma, offering advanced tools for transaction management and error handling.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "repository": "https://github.com/cocoychris/prisma-utils",
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "pnpm build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "prisma",
+    "utils",
+    "transaction",
+    "error-handling",
+    "database"
+  ],
+  "author": "Andrash Yang",
+  "license": "MIT",
+  "packageManager": "pnpm@10.8.1",
+  "dependencies": {
+    "@prisma/client": "^6.13.0",
+    "prisma-error-enum": "^0.1.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "prisma": "^6.13.0",
+    "typescript": "^5.8.3"
+  }
+}
