@@ -8,8 +8,8 @@ Prisma 工具包是一組專為 Node.js 專案打造的 Prisma 實用工具。�
 
 ## Main Features
 
-- **Transaction Watcher**: Create watched transactions to listen for success or rollback events and execute custom actions based on the outcome.
-  - See `watchedTransaction()` in `src/utils/transaction.ts`.
+- **Transaction Manager**: Create managed transactions that allow you to register handlers for success (commit) or rollback events. This is useful for side effects that should only run if the transaction completes successfully, such as sending notifications or clearing caches.
+  - See `useTransactionManager()` in `src/utils/transaction.ts`.
 - **Prisma Error Handling**: Utilities to identify and handle specific Prisma errors by their error codes.
   - See `isPrismaError()` in `src/utils/error-handling.ts`.
   - Includes the `PrismaErrorCode` enum from the [PrismaError](https://www.npmjs.com/package/prisma-error-enum) package for easy error code checking.
