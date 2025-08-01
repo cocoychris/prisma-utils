@@ -7,7 +7,10 @@
   "files": [
     "dist"
   ],
-  "repository": "https://github.com/cocoychris/prisma-utils",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cocoychris/prisma-utils.git"
+  },
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "pnpm build",
