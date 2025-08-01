@@ -1,24 +1,15 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaTransactionClient } from "../types";
 
-/**
- * A watcher for Prisma transactions.
- * Use it to register handlers that execute after a transaction is committed or rolled back.
- * The watcher can be passed to other functions, allowing them to add operations
- * to the transaction via the `client` property.
- *
- * 此物件代表一個 Prisma Transaction 的監聽器
- * 此監聽器允許你註冊 Transaction 成功或失敗(回滾)後要觸發的處理器。
- * 也可以將此 TransactionWatcher 傳入其他函式中，
- * 並透過 client 屬性來加入要放入 Transaction 中執行的資料庫操作。
- */
-type TransactionWatcher<T> = _TransactionWatcher<T>;
 type SuccessHandler<T> = (result: T) => T | Promise<T>;
 type ErrorHandler = (error: unknown) => void | Promise<void>;
 
 const TRANSACTION_SUCCESS_HANDLER_KEY = Symbol("TransactionSuccessAccessKey");
 const TRANSACTION_ERROR_HANDLER_KEY = Symbol("TransactionErrorAccessKey");
 
+/**
+ * @see TransactionWatcher
+ */
 class _TransactionWatcher<T> {
   private _successHandlers: SuccessHandler<T>[] = [];
   private _errorHandlers: ErrorHandler[] = [];
@@ -105,6 +96,19 @@ interface WatcherOptions<T> {
   errorHandlerErrorLogger?: (error: any) => void;
   existingWatcher?: TransactionWatcher<T>;
 }
+
+/**
+ * A watcher for Prisma transactions.
+ * Use it to register handlers that execute after a transaction is committed or rolled back.
+ * The watcher can be passed to other functions, allowing them to add operations
+ * to the transaction via the `client` property.
+ *
+ * 此物件代表一個 Prisma Transaction 的監聽器
+ * 此監聽器允許你註冊 Transaction 成功或失敗(回滾)後要觸發的處理器。
+ * 也可以將此 TransactionWatcher 傳入其他函式中，
+ * 並透過 client 屬性來加入要放入 Transaction 中執行的資料庫操作。
+ */
+export type TransactionWatcher<T> = _TransactionWatcher<T>;
 
 /**
  * Creates a Prisma transaction monitored by a `TransactionWatcher`.
