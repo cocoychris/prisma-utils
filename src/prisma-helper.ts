@@ -30,15 +30,15 @@ const TRANSACTION_ERROR_HANDLER_KEY = Symbol("TransactionErrorAccessKey");
  */
 export type TransactionManager<
   Result,
-  PrismaTransactionClient extends TransactionClient<IPrismaClient>
-> = _TransactionManager<Result, PrismaTransactionClient>;
+  PrismaClient extends IPrismaClient
+> = _TransactionManager<Result, PrismaClient>;
 
 /**
  * @see TransactionManager
  */
 class _TransactionManager<
   Result,
-  PrismaTransactionClient extends TransactionClient<IPrismaClient>
+  PrismaClient extends IPrismaClient
 > {
   private _successHandlers: SuccessHandler<Result>[] = [];
   private _errorHandlers: ErrorHandler[] = [];
@@ -62,12 +62,12 @@ class _TransactionManager<
    * 用於執行 Transaction 的 PrismaClient。
    * 若 Transaction 已經結束，嘗試讀取此屬性會拋出錯誤。
    */
-  get client(): PrismaTransactionClient {
+  get client(): TransactionClient<PrismaClient> {
     this._assertNotTerminated();
     return this._client;
   }
 
-  constructor(private readonly _client: PrismaTransactionClient) {}
+  constructor(private readonly _client: TransactionClient<PrismaClient>) {}
 
   /**
    * Registers a handler to run when the transaction is successfully committed.
@@ -210,7 +210,7 @@ export class PrismaHelper<
   async useTransactionManager<Result = any>(
     prisma: PrismaClient,
     exec: (
-      manager: TransactionManager<Result, TransactionClient<PrismaClient>>
+      manager: TransactionManager<Result, PrismaClient>
     ) => Promise<Result>,
     options: ManagerOptions = {}
   ): Promise<Result> {
@@ -219,14 +219,14 @@ export class PrismaHelper<
       errorHandlerErrorLogger = console.error,
     } = options;
     let manager:
-      | TransactionManager<Result, TransactionClient<PrismaClient>>
+      | TransactionManager<Result, PrismaClient>
       | undefined;
     try {
       const result = await prisma.$transaction(
         async (client: TransactionClient<PrismaClient>) => {
           manager = new _TransactionManager<
             Result,
-            TransactionClient<PrismaClient>
+            PrismaClient
           >(client);
           return exec(manager);
         }
