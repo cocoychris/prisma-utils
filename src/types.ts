@@ -1,10 +1,29 @@
-import { Prisma, PrismaClient } from "@prisma/client";
-import { DefaultArgs } from "@prisma/client/runtime/library";
+type AnyFunction = (...args: any[]) => any;
 
-/**
- * 代表用於 Prisma Transaction 的 Client
- */
-export type PrismaTransactionClient = Omit<
-  PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>,
+export type ClassConstructor<T> = () => T;
+
+export interface IPrismaClient {
+  [K: symbol]: { types: any };
+  $on: AnyFunction;
+  $connect: AnyFunction;
+  $disconnect: AnyFunction;
+  $use: AnyFunction;
+  $executeRaw: AnyFunction;
+  $executeRawUnsafe: AnyFunction;
+  $queryRaw: AnyFunction;
+  $queryRawUnsafe: AnyFunction;
+  $transaction: AnyFunction;
+}
+
+export type IPrismaTransactionClient = Omit<
+  IPrismaClient,
   "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
 >;
+
+export interface IPrismaClientKnownRequestError extends Error {
+  code: string;
+  meta?: Record<string, unknown>;
+  clientVersion: string;
+  batchRequestIdx?: number;
+  get [Symbol.toStringTag](): string;
+}
