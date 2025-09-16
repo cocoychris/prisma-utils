@@ -1,13 +1,13 @@
 type AnyFunction = (...args: any[]) => any;
 
-export type ClassConstructor<T> = () => T;
+export type ClassConstructor<T> = new (...args: any[]) => T;
 
 export interface IPrismaClient {
   [K: symbol]: { types: any };
   $on: AnyFunction;
   $connect: AnyFunction;
   $disconnect: AnyFunction;
-  $use: AnyFunction;
+  $use?: AnyFunction;
   $executeRaw: AnyFunction;
   $executeRawUnsafe: AnyFunction;
   $queryRaw: AnyFunction;

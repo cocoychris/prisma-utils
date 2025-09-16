@@ -224,9 +224,10 @@ export class PrismaHelper<
     try {
       const result = await prisma.$transaction(
         async (client: TransactionClient<PrismaClient>) => {
-          manager = new _TransactionManager<Result, TransactionClient<PrismaClient>>(
-            client
-          );
+          manager = new _TransactionManager<
+            Result,
+            TransactionClient<PrismaClient>
+          >(client);
           return exec(manager);
         }
       );
