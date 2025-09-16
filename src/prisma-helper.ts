@@ -3,7 +3,7 @@ import {
   ClassConstructor,
   IPrismaClient,
   IPrismaClientKnownRequestError,
-  IPrismaTransactionClient,
+  TransactionClient,
 } from "./types";
 
 interface ManagerOptions {
@@ -30,7 +30,7 @@ const TRANSACTION_ERROR_HANDLER_KEY = Symbol("TransactionErrorAccessKey");
  */
 export type TransactionManager<
   Result,
-  PrismaTransactionClient extends IPrismaTransactionClient
+  PrismaTransactionClient extends TransactionClient<IPrismaClient>
 > = _TransactionManager<Result, PrismaTransactionClient>;
 
 /**
@@ -38,7 +38,7 @@ export type TransactionManager<
  */
 class _TransactionManager<
   Result,
-  PrismaTransactionClient extends IPrismaTransactionClient
+  PrismaTransactionClient extends TransactionClient<IPrismaClient>
 > {
   private _successHandlers: SuccessHandler<Result>[] = [];
   private _errorHandlers: ErrorHandler[] = [];
@@ -67,10 +67,7 @@ class _TransactionManager<
     return this._client;
   }
 
-  constructor(
-    private readonly PrismaTransactionClientClass: ClassConstructor<PrismaTransactionClient>,
-    private readonly _client: PrismaTransactionClient
-  ) {}
+  constructor(private readonly _client: PrismaTransactionClient) {}
 
   /**
    * Registers a handler to run when the transaction is successfully committed.
@@ -123,12 +120,10 @@ class _TransactionManager<
 
 export class PrismaHelper<
   PrismaClient extends IPrismaClient,
-  PrismaTransactionClient extends IPrismaTransactionClient,
   PrismaClientKnownRequestError extends IPrismaClientKnownRequestError
 > {
   constructor(
     private readonly PrismaClientClass: ClassConstructor<PrismaClient>,
-    private readonly PrismaTransactionClientClass: ClassConstructor<PrismaTransactionClient>,
     private readonly PrismaClientKnownRequestErrorClass: ClassConstructor<PrismaClientKnownRequestError>
   ) {}
 
@@ -215,7 +210,7 @@ export class PrismaHelper<
   async useTransactionManager<Result = any>(
     prisma: PrismaClient,
     exec: (
-      manager: TransactionManager<Result, PrismaTransactionClient>
+      manager: TransactionManager<Result, TransactionClient<PrismaClient>>
     ) => Promise<Result>,
     options: ManagerOptions = {}
   ): Promise<Result> {
@@ -224,13 +219,12 @@ export class PrismaHelper<
       errorHandlerErrorLogger = console.error,
     } = options;
     let manager:
-      | TransactionManager<Result, PrismaTransactionClient>
+      | TransactionManager<Result, TransactionClient<PrismaClient>>
       | undefined;
     try {
       const result = await prisma.$transaction(
-        async (client: PrismaTransactionClient) => {
-          manager = new _TransactionManager<Result, PrismaTransactionClient>(
-            this.PrismaTransactionClientClass,
+        async (client: TransactionClient<PrismaClient>) => {
+          manager = new _TransactionManager<Result, TransactionClient<PrismaClient>>(
             client
           );
           return exec(manager);
@@ -259,8 +253,8 @@ export class PrismaHelper<
    * @param exec - The function to execute within the transaction.
    */
   async useTransaction<T>(
-    prismaOrClient: PrismaClient | PrismaTransactionClient,
-    exec: (client: PrismaTransactionClient) => Promise<T>
+    prismaOrClient: PrismaClient | TransactionClient<PrismaClient>,
+    exec: (client: TransactionClient<PrismaClient>) => Promise<T>
   ): Promise<T> {
     if (
       prismaOrClient instanceof this.PrismaClientClass &&
@@ -268,6 +262,6 @@ export class PrismaHelper<
     ) {
       return await (prismaOrClient as PrismaClient).$transaction(exec);
     }
-    return await exec(prismaOrClient as PrismaTransactionClient);
+    return await exec(prismaOrClient as TransactionClient<PrismaClient>);
   }
 }

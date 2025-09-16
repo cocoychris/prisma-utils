@@ -15,8 +15,8 @@ export interface IPrismaClient {
   $transaction: AnyFunction;
 }
 
-export type IPrismaTransactionClient = Omit<
-  IPrismaClient,
+export type TransactionClient<T extends IPrismaClient> = Omit<
+  T,
   "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
 >;
 
