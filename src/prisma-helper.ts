@@ -36,10 +36,7 @@ export type TransactionManager<
 /**
  * @see TransactionManager
  */
-class _TransactionManager<
-  Result,
-  PrismaClient extends IPrismaClient
-> {
+class _TransactionManager<Result, PrismaClient extends IPrismaClient> {
   private _successHandlers: SuccessHandler<Result>[] = [];
   private _errorHandlers: ErrorHandler[] = [];
   private _isTerminated = false;
@@ -123,8 +120,7 @@ export class PrismaHelper<
   PrismaClientKnownRequestError extends IPrismaClientKnownRequestError
 > {
   constructor(
-    private readonly PrismaClientClass: ClassConstructor<PrismaClient>,
-    private readonly PrismaClientKnownRequestErrorClass: ClassConstructor<PrismaClientKnownRequestError>
+    private readonly PrismaClientClass: ClassConstructor<PrismaClient>
   ) {}
 
   /**
@@ -144,7 +140,10 @@ export class PrismaHelper<
     modelName: string | null = null
   ): error is PrismaClientKnownRequestError {
     // 不是 Prisma 錯誤
-    if (!(error instanceof this.PrismaClientKnownRequestErrorClass)) {
+    if (
+      !(error instanceof Error) ||
+      (error as any).name !== "PrismaClientKnownRequestError"
+    ) {
       return false;
     }
     // 錯誤代碼不符
@@ -218,16 +217,11 @@ export class PrismaHelper<
       successHandlerErrorLogger = console.error,
       errorHandlerErrorLogger = console.error,
     } = options;
-    let manager:
-      | TransactionManager<Result, PrismaClient>
-      | undefined;
+    let manager: TransactionManager<Result, PrismaClient> | undefined;
     try {
       const result = await prisma.$transaction(
         async (client: TransactionClient<PrismaClient>) => {
-          manager = new _TransactionManager<
-            Result,
-            PrismaClient
-          >(client);
+          manager = new _TransactionManager<Result, PrismaClient>(client);
           return exec(manager);
         }
       );
