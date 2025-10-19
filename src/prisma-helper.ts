@@ -129,15 +129,15 @@ export class PrismaHelper<
    * 判斷是否為特定的 Prisma 錯誤
    * @param error The error object to inspect.
    * @param errorCode The `PrismaErrorCode` to match.
-   * @param targetList An optional list of field names. The check passes if any of these fields are mentioned in the error's `meta.target` or `meta.field_name`.
-   * @param modelName An optional model name to match against `error.meta.modelName`.
+   * @param metaPatterns Optional patterns to match against the error's meta information.
+   * @param messagePatterns Optional patterns to match against the error's message.
    * @returns `true` if the error matches all specified criteria, otherwise `false`.
    */
   isPrismaError(
     error: unknown,
     errorCode: PrismaErrorCode,
-    targetList?: string[],
-    modelName: string | null = null
+    metaPatterns?: RegExp | string | string[] | null,
+    messagePatterns?: RegExp | string | string[] | null
   ): error is PrismaClientKnownRequestError {
     // 不是 Prisma 錯誤
     if (
@@ -151,41 +151,24 @@ export class PrismaHelper<
     if (prismaError.code !== errorCode) {
       return false;
     }
-    // modelName 不符合
-    if (modelName && prismaError.meta?.modelName !== modelName) {
-      return false;
-    }
-    // 不用找尋 target
-    if (!targetList || !targetList.length) {
-      return true;
-    }
-    // 從 meta.target 中找尋 target
-    if (Array.isArray(prismaError.meta?.target)) {
-      for (const errTarget of prismaError.meta.target) {
-        if (typeof errTarget !== "string") {
-          continue;
-        }
-        for (const target of targetList) {
-          if (errTarget.includes(target)) {
-            return true;
-          }
-        }
+    const metaString = JSON.stringify(prismaError.meta || {});
+    if (metaPatterns) {
+      if (Array.isArray(metaPatterns)) {
+        return metaPatterns.some((p) => metaString.includes(p));
+      } else if (metaPatterns instanceof RegExp) {
+        return metaPatterns.test(metaString);
+      } else {
+        return metaString.includes(metaPatterns);
       }
     }
-    // 從 meta.field_name 中找尋 target
-    const fieldNames = prismaError.meta?.field_name;
-    if (typeof fieldNames === "string") {
-      for (const target of targetList) {
-        if (fieldNames.includes(target)) {
-          return true;
-        }
+    if (messagePatterns) {
+      if (Array.isArray(messagePatterns)) {
+        return messagePatterns.some((p) => prismaError.message.includes(p));
+      } else if (messagePatterns instanceof RegExp) {
+        return messagePatterns.test(prismaError.message);
+      } else {
+        return prismaError.message.includes(messagePatterns);
       }
-      // const fieldNameList: string[] = fieldNames.replace(/[ _]/g, '.').split('.');
-      // for (const target of targetList) {
-      //   if (fieldNameList.includes(target)) {
-      //     return prismaError;
-      //   }
-      // }
     }
     // 查無 target
     return false;
